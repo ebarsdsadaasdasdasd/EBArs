@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ebars.</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0a0812;
@@ -15,15 +15,15 @@
             --accent-glow: rgba(188, 145, 255, 0.4);
             --text: #e2daff;
             --text-dim: #8b7fa3;
+            --font-main: 'JetBrains Mono', monospace;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; font-family: var(--font-main); }
         
         body { 
             background-color: var(--bg); 
             background-image: radial-gradient(circle at 50% -20%, #20153a 0%, var(--bg) 70%);
             color: var(--text); 
-            font-family: 'Inter', sans-serif; 
             margin: 0; 
             display: flex; 
             flex-direction: column; 
@@ -32,9 +32,31 @@
             padding: 0 20px; 
         }
 
+        #device-selector {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        #device-selector.hidden { opacity: 0; visibility: hidden; }
+
+        .sel-card { text-align: center; animation: slideUp 0.6s ease; }
+        .sel-title { font-size: 24px; margin-bottom: 30px; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+        .sel-grid { display: flex; gap: 20px; }
+        
+        .sel-option {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 40px; border-radius: 20px; cursor: pointer; transition: 0.3s;
+            width: 160px; display: flex; flex-direction: column; align-items: center; gap: 15px;
+        }
+        .sel-option:hover { border-color: var(--accent); box-shadow: 0 0 30px var(--accent-glow); transform: translateY(-5px); }
+        .sel-option svg { width: 40px; height: 40px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+        .sel-option span { font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+
+        #main-wrapper { display: none; width: 100%; max-width: 900px; flex-direction: column; align-items: center; opacity: 0; transition: opacity 0.5s ease; }
+
         header { 
             width: 100%; 
-            max-width: 900px; 
             padding: 50px 0; 
             display: flex; 
             justify-content: space-between; 
@@ -43,11 +65,9 @@
             margin-bottom: 40px; 
         }
 
-        /* ОБНОВЛЕННЫЙ СТИЛЬ ЗАГОЛОВКА */
         h1 { 
-            font-family: 'JetBrains Mono', monospace;
             font-size: 32px; 
-            font-weight: 300; 
+            font-weight: 400; 
             letter-spacing: -1px; 
             margin: 0; 
             background: linear-gradient(to bottom, #fff 30%, var(--accent) 100%);
@@ -76,17 +96,9 @@
             color: var(--accent); 
         }
 
-        .main-content { width: 100%; max-width: 900px; }
-        
+        .main-content { width: 100%; }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.4s ease forwards; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
 
         .editor-space { 
             position: relative; 
@@ -97,17 +109,33 @@
             overflow: hidden;
         }
 
-        #backdrop { 
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+        #backdrop, textarea { 
+            width: 100%; 
+            height: 300px; 
             padding: 24px; 
-            color: transparent; 
-            white-space: pre-wrap; 
-            word-wrap: break-word; 
-            font-family: 'JetBrains Mono', monospace; 
             font-size: 15px; 
             line-height: 1.7; 
+            border: none;
+            margin: 0;
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+        }
+
+        #backdrop { 
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+            color: transparent; 
             pointer-events: none; 
             z-index: 1; 
+        }
+
+        textarea { 
+            background: transparent; 
+            color: var(--text); 
+            resize: none; 
+            outline: none; 
+            z-index: 2; 
+            position: relative; 
+            display: block;
         }
 
         mark { 
@@ -116,21 +144,32 @@
             border-bottom: 2px solid var(--accent); 
         }
 
-        textarea { 
-            width: 100%; 
-            height: 300px; 
-            background: transparent; 
-            border: none; 
-            color: var(--text); 
-            padding: 24px; 
-            font-family: 'JetBrains Mono', monospace; 
-            font-size: 15px; 
-            line-height: 1.7; 
-            resize: none; 
-            outline: none; 
-            z-index: 2; 
-            position: relative; 
+        .empty-msg {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-dim);
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            animation: fadeIn 0.5s ease;
         }
+
+        .compare-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .compare-area { height: 200px !important; }
+        
+        .similarity-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+            padding: 40px; text-align: center; margin-top: 20px;
+            border-top: 4px solid var(--accent);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUpCard 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .sim-val { font-size: 64px; color: var(--accent); text-shadow: 0 0 20px var(--accent-glow); font-weight: 700; }
 
         .action-btn { 
             width: 100%; 
@@ -159,15 +198,6 @@
             animation: slideUp 0.4s ease forwards;
         }
 
-        .empty-msg {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-dim);
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
         .controls-group { display: flex; gap: 8px; margin-right: 15px; }
         
         .indicator, .eye-btn { 
@@ -181,18 +211,37 @@
         }
 
         .indicator:hover, .eye-btn:hover { border-color: var(--accent); }
-
         .indicator svg, .eye-btn svg { width: 16px; height: 16px; fill: none; stroke: var(--text-dim); stroke-width: 2; }
-        
         .active-indicator { background: var(--accent) !important; border-color: var(--accent) !important; }
         .active-indicator svg { stroke: var(--bg) !important; }
 
+        /* --- АДАПТАЦИЯ --- */
+        body.is-mobile header { flex-direction: column; gap: 20px; padding: 30px 0; }
+        body.is-mobile h1 { font-size: 24px; }
+        body.is-mobile nav { width: 100%; }
+        body.is-mobile .nav-btn { flex: 1; padding: 12px 5px; font-size: 9px; }
+        body.is-mobile .compare-container { grid-template-columns: 1fr; }
+        
+        body.is-mobile textarea, 
+        body.is-mobile #backdrop { 
+            height: 350px; 
+            font-size: 14px; 
+            padding: 16px; 
+            line-height: 1.6; 
+        }
+        
+        body.is-mobile .sim-val { font-size: 48px; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUpCard { to { opacity: 1; transform: translateY(0); } }
+        
         #modalOverlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(10, 8, 18, 0.95); 
             backdrop-filter: blur(8px); 
             display: none; justify-content: center; align-items: center; 
-            z-index: 1000; 
+            z-index: 10000; 
         }
 
         .modal-card { 
@@ -203,7 +252,6 @@
             padding: 30px; 
             max-height: 85vh; 
             overflow-y: auto; 
-            animation: slideUp 0.3s ease-out;
         }
 
         .context-item { 
@@ -212,64 +260,73 @@
             border-radius: 10px;
             border-left: 4px solid var(--accent); 
             margin-bottom: 15px; 
-            font-family: 'JetBrains Mono', monospace; 
             font-size: 14px; 
-            line-height: 1.6;
             color: var(--text-dim);
             white-space: pre-wrap;
-            word-wrap: break-word;
         }
 
-        .context-item b { 
-            color: var(--accent); 
-            background: rgba(188, 145, 255, 0.2); 
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            font-weight: 600;
-        }
-
-        .anomaly-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-        .anomaly-card { 
-            background: var(--surface); 
-            border: 1px solid var(--border); 
-            border-radius: 12px; 
-            padding: 15px;
-            opacity: 0;
-            animation: slideUp 0.4s ease forwards;
-        }
-
-        .anomaly-word { font-family: 'JetBrains Mono', monospace; color: var(--text); display: block; margin-bottom: 5px; }
-        .anomaly-word span { color: var(--accent); background: rgba(188, 145, 255, 0.2); padding: 0 2px; }
+        .context-item b { color: var(--accent); background: rgba(188, 145, 255, 0.2); padding: 2px 6px; border-radius: 4px; }
+        .anomaly-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .anomaly-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px; animation: slideUp 0.4s ease forwards; }
+        .anomaly-word { color: var(--text); display: block; margin-bottom: 5px; }
+        .anomaly-word span { color: var(--accent); background: rgba(188, 145, 255, 0.2); }
         .anomaly-meta { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
-
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>ebars.</h1>
-    <nav>
-        <button class="nav-btn active" onclick="switchTab('repeats')">повторы</button>
-        <button class="nav-btn" onclick="switchTab('symbols')">скрытые символы</button>
-    </nav>
-</header>
-
-<div class="main-content">
-    <div class="editor-space">
-        <div id="backdrop"></div>
-        <textarea id="txtIn" placeholder="вставьте текст сюда..." oninput="sync()"></textarea>
+<div id="device-selector">
+    <div class="sel-card">
+        <div class="sel-title">выбери устройство</div>
+        <div class="sel-grid">
+            <div class="sel-option" onclick="initApp('pc')">
+                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                <span>ПК</span>
+            </div>
+            <div class="sel-option" onclick="initApp('mobile')">
+                <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                <span>ТЕЛЕФОН</span>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div id="repeatsTab" class="tab-content active">
-        <button class="action-btn" onclick="analyzeRepeats()">найти повторы</button>
-        <div id="repeatResults"></div>
-    </div>
+<div id="main-wrapper">
+    <header>
+        <h1>ebars.</h1>
+        <nav>
+            <button class="nav-btn active" onclick="switchTab('repeats')">повторы</button>
+            <button class="nav-btn" onclick="switchTab('compare')">сравнение</button>
+            <button class="nav-btn" onclick="switchTab('symbols')">символы</button>
+        </nav>
+    </header>
 
-    <div id="symbolsTab" class="tab-content">
-        <button class="action-btn" onclick="analyzeAnomalies()">найти скрытые символы</button>
-        <div id="anomalyResults" class="anomaly-grid"></div>
+    <div class="main-content">
+        <div id="repeatsTab" class="tab-content active">
+            <div class="editor-space">
+                <div id="backdrop"></div>
+                <textarea id="txtIn" placeholder="введите текст..." oninput="sync()"></textarea>
+            </div>
+            <button class="action-btn" onclick="analyzeRepeats()">найти повторы</button>
+            <div id="repeatResults"></div>
+        </div>
+
+        <div id="compareTab" class="tab-content">
+            <div class="compare-container">
+                <div class="editor-space"><textarea id="compA" class="compare-area" placeholder="текст (оригинал)"></textarea></div>
+                <div class="editor-space"><textarea id="compB" class="compare-area" placeholder="текст (подозрительный)"></textarea></div>
+            </div>
+            <button class="action-btn" onclick="advancedCompare()">сравнить текста</button>
+            <div id="compareResult"></div>
+        </div>
+
+        <div id="symbolsTab" class="tab-content">
+            <div class="editor-space">
+                <textarea id="txtSym" placeholder="введите текст..."></textarea>
+            </div>
+            <button class="action-btn" onclick="analyzeAnomalies()">найти скрытые символы</button>
+            <div id="anomalyResults" class="anomaly-grid"></div>
+        </div>
     </div>
 </div>
 
@@ -287,40 +344,57 @@
         eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>'
     };
 
+    function initApp(mode) {
+        const selector = document.getElementById('device-selector');
+        const wrapper = document.getElementById('main-wrapper');
+        if (mode === 'mobile') document.body.classList.add('is-mobile');
+        selector.classList.add('hidden');
+        setTimeout(() => {
+            selector.style.display = 'none';
+            wrapper.style.display = 'flex';
+            setTimeout(() => wrapper.style.opacity = '1', 50);
+        }, 500);
+    }
+
     function switchTab(tab) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        if(tab === 'repeats') {
-            document.getElementById('repeatsTab').classList.add('active');
-            document.querySelector('[onclick="switchTab(\'repeats\')"]').classList.add('active');
-        } else {
-            document.getElementById('symbolsTab').classList.add('active');
-            document.querySelector('[onclick="switchTab(\'symbols\')"]').classList.add('active');
-        }
+        document.getElementById(tab + 'Tab').classList.add('active');
+        event.currentTarget.classList.add('active');
     }
 
     function sync() {
-        const text = document.getElementById('txtIn').value;
+        const textarea = document.getElementById('txtIn');
         const bdrop = document.getElementById('backdrop');
+        const text = textarea.value;
+        bdrop.scrollTop = textarea.scrollTop;
+        bdrop.scrollLeft = textarea.scrollLeft;
+
         if (activePhrase) {
             const escaped = activePhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(`(${escaped})`, 'gi');
             bdrop.innerHTML = text.replace(regex, '<mark>$1</mark>') + '\n';
-        } else { bdrop.innerHTML = text + '\n'; }
+        } else { 
+            bdrop.innerHTML = text + '\n'; 
+        }
     }
+
+    document.getElementById('txtIn').addEventListener('scroll', function() {
+        const bdrop = document.getElementById('backdrop');
+        bdrop.scrollTop = this.scrollTop;
+        bdrop.scrollLeft = this.scrollLeft;
+    });
 
     function toggleHighlight(phrase, el) {
         if (activePhrase === phrase) {
-            activePhrase = ""; 
-            el.classList.remove('active-indicator'); 
+            activePhrase = ""; el.classList.remove('active-indicator');
             el.querySelector('svg').innerHTML = icons.arrow;
         } else {
-            document.querySelectorAll('.indicator').forEach(i => { 
-                i.classList.remove('active-indicator'); 
-                i.querySelector('svg').innerHTML = icons.arrow; 
+            document.querySelectorAll('.indicator').forEach(i => {
+                i.classList.remove('active-indicator');
+                i.querySelector('svg').innerHTML = icons.arrow;
             });
-            activePhrase = phrase; 
-            el.classList.add('active-indicator'); 
+            activePhrase = phrase; el.classList.add('active-indicator');
             el.querySelector('svg').innerHTML = icons.close;
         }
         sync();
@@ -332,20 +406,13 @@
         resDiv.innerHTML = ''; activePhrase = ""; sync();
         
         if (!input.trim()) {
-            resDiv.innerHTML = '<div class="empty-msg">Текст не введен</div>';
+            resDiv.innerHTML = '<div class="empty-msg">введите текст для анализа</div>';
             return;
         }
 
-        // 1. Подготовка слов (нижний регистр, без пунктуации)
-        const words = input.toLowerCase()
-            .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()\n\r]/g, " ")
-            .replace(/\s+/g, ' ')
-            .trim()
-            .split(' ');
-        
+        const words = input.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()\n\r]/g, " ").replace(/\s+/g, ' ').trim().split(' ');
         const counts = new Map();
 
-        // 2. Собираем все фразы от 2 до 10 слов
         for (let len = 2; len <= 10; len++) {
             for (let i = 0; i <= words.length - len; i++) {
                 const p = words.slice(i, i + len).join(' ');
@@ -353,45 +420,30 @@
             }
         }
 
-        // 3. Оставляем только те, что повторяются (минимум 2 раза)
         let dupes = Array.from(counts.entries()).filter(d => d[1] > 1);
         
         if (dupes.length === 0) {
-            resDiv.innerHTML = '<div class="empty-msg">Повторов не найдено</div>';
+            resDiv.innerHTML = '<div class="empty-msg">повторов не найдено</div>';
             return;
         }
 
-        // 4. Сортируем от самых ДЛИННЫХ к коротким
-        dupes.sort((a, b) => b[0].split(' ').length - a[0].split(' ').length || b[0].length - a[0].length);
+        dupes.sort((a, b) => b[0].split(' ').length - a[0].split(' ').length);
 
         const filtered = [];
         for (let i = 0; i < dupes.length; i++) {
             let [phrase, count] = dupes[i];
             let isRedundant = false;
-
             for (let j = 0; j < dupes.length; j++) {
                 if (i === j) continue;
-                let [otherPhrase, otherCount] = dupes[j];
-
-                // КРИТИЧЕСКОЕ ПРАВИЛО:
-                // Если наша фраза (i) содержится внутри другой фразы (j) 
-                // И при этом они встречаются одинаковое количество раз,
-                // значит наша фраза — это просто "огрызок" более длинной. Скрываем её.
-                if (otherPhrase.includes(phrase) && count === otherCount) {
-                    isRedundant = true;
-                    break;
+                if (dupes[j][0].includes(phrase) && count === dupes[j][1]) {
+                    isRedundant = true; break;
                 }
             }
-
-            if (!isRedundant) {
-                filtered.push(dupes[i]);
-            }
+            if (!isRedundant) filtered.push(dupes[i]);
         }
 
-        // 5. Итоговая сортировка: сначала самые частые, при равенстве - самые длинные
         filtered.sort((a, b) => b[1] - a[1] || b[0].length - a[0].length);
 
-        // 6. Вывод
         filtered.forEach(([txt, n], index) => {
             const row = document.createElement('div');
             row.className = 'result-row';
@@ -405,67 +457,84 @@
                         <svg viewBox="0 0 24 24" stroke="currentColor">${icons.eye}</svg>
                     </div>
                 </div>
-                <div style="flex-grow:1; font-size: 14px; color: var(--text);">${txt}</div>
-                <div style="color:var(--accent); font-weight:700; background: rgba(188, 145, 255, 0.1); padding: 4px 10px; border-radius: 6px; white-space: nowrap;">${n} раз</div>
+                <div style="flex-grow:1; font-size: 14px;">${txt}</div>
+                <div style="color:var(--accent); font-weight:700;">${n} раз</div>
             `;
             resDiv.appendChild(row);
         });
     }
 
-    function showContext(phrase) {
-        const text = document.getElementById('txtIn').value;
-        const body = document.getElementById('modalBody');
-        body.innerHTML = `<div style="color:var(--accent); font-size:12px; margin-bottom:20px; text-transform:uppercase; font-weight:700; letter-spacing:1.5px;">повтор: ${phrase}</div>`;
+    function advancedCompare() {
+        const s1 = document.getElementById('compA').value.trim().toLowerCase();
+        const s2 = document.getElementById('compB').value.trim().toLowerCase();
+        const resDiv = document.getElementById('compareResult');
         
-        const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escaped, 'gi');
-        let match;
-
-        while ((match = regex.exec(text)) !== null) {
-            const before = text.substring(0, match.index).trim().split(/\s+/).slice(-3).join(' ');
-            const after = text.substring(match.index + phrase.length).trim().split(/\s+/).slice(0, 3).join(' ');
-
-            const item = document.createElement('div');
-            item.className = 'context-item';
-            item.innerHTML = `${before} <b>${match[0]}</b> ${after}`;
-            body.appendChild(item);
+        if (!s1 || !s2) {
+            resDiv.innerHTML = '<div class="empty-msg">введите оба текста</div>';
+            return;
         }
-        document.getElementById('modalOverlay').style.display = 'flex';
+
+        function getBigrams(str) {
+            const bigrams = new Set();
+            for (let i = 0; i < str.length - 1; i++) bigrams.add(str.substring(i, i + 2));
+            return bigrams;
+        }
+
+        const b1 = getBigrams(s1), b2 = getBigrams(s2);
+        let intersect = 0;
+        for (let b of b1) if (b2.has(b)) intersect++;
+        const score = Math.floor((2 * intersect) / (b1.size + b2.size) * 100) || 0;
+        
+        resDiv.innerHTML = `
+            <div class="similarity-card">
+                <div style="text-transform:uppercase; font-size:10px; letter-spacing:2px; opacity:0.6">Уникальность: ${100-score}%</div>
+                <div class="sim-val">${score}%</div>
+                <div style="color:var(--text-dim)">схожести</div>
+            </div>
+        `;
     }
 
-    function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-
     function analyzeAnomalies() {
-        const input = document.getElementById('txtIn').value;
+        const input = document.getElementById('txtSym').value;
         const resDiv = document.getElementById('anomalyResults');
         resDiv.innerHTML = '';
         
         if (!input.trim()) {
-            resDiv.innerHTML = '<div class="empty-msg" style="grid-column: 1/-1">Не найдено</div>';
+            resDiv.innerHTML = '<div class="empty-msg" style="grid-column: 1/-1">введите текст</div>';
             return;
         }
 
         const words = input.split(/\s+/);
-        let foundCount = 0;
-
+        let found = false;
         words.forEach(word => {
             const nonRussianRegex = /[^а-яё0-9\s.,!?:;()\-]/gi;
             if (nonRussianRegex.test(word)) {
+                found = true;
                 const count = (word.match(nonRussianRegex) || []).length;
                 const highlighted = word.replace(nonRussianRegex, (m) => `<span>${m}</span>`);
-                const card = document.createElement('div');
-                card.className = 'anomaly-card';
-                card.style.animationDelay = `${foundCount * 0.05}s`;
-                card.innerHTML = `<span class="anomaly-word">${highlighted}</span><span class="anomaly-meta">скрытых символов: ${count}</span>`;
-                resDiv.appendChild(card);
-                foundCount++;
+                resDiv.innerHTML += `<div class="anomaly-card"><span class="anomaly-word">${highlighted}</span><span class="anomaly-meta">скрытых: ${count}</span></div>`;
             }
         });
 
-        if (foundCount === 0) {
-            resDiv.innerHTML = '<div class="empty-msg" style="grid-column: 1/-1">Не найдено</div>';
+        if (!found) {
+            resDiv.innerHTML = '<div class="empty-msg" style="grid-column: 1/-1">скрытых символов нет</div>';
         }
     }
+
+    function showContext(phrase) {
+        const text = document.getElementById('txtIn').value;
+        const body = document.getElementById('modalBody');
+        body.innerHTML = `<div style="color:var(--accent); margin-bottom:20px; font-weight:700;">ПОВТОР: ${phrase}</div>`;
+        const regex = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        let m;
+        while ((m = regex.exec(text)) !== null) {
+            const before = text.substring(m.index-30, m.index);
+            const after = text.substring(m.index+phrase.length, m.index+phrase.length+30);
+            body.innerHTML += `<div class="context-item">...${before}<b>${m[0]}</b>${after}...</div>`;
+        }
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
 </script>
 
 </body>
